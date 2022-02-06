@@ -1,10 +1,6 @@
 package main;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DBConnection {
     private static Connection connection;
@@ -21,7 +17,7 @@ public class DBConnection {
                         "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
                         "Path TEXT NOT NULL, " +
                         "Code INT NOT NULL, " +
-                        "content MEDIUMTEXT NOT NULL");
+                        "content MEDIUMTEXT NOT NULL)");
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -29,8 +25,14 @@ public class DBConnection {
         return connection;
     }
     public static void fullTheDb (String path,int code,String content)throws SQLException{
-        connection.createStatement().executeUpdate("INSERT INTO pages (Path, Code, content )" +
-                "VALUES('" + path +"','" + code +"','"+content +"'" );
-
+        String sql = "INSERT INTO pages (Path, Code, content) VALUES (?, ?, ?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setString(1,path);
+        preparedStatement.setInt(2,code);
+        preparedStatement.setString(3,content);
+        preparedStatement.executeUpdate();
+    }
+    public static void closeConnection() throws SQLException {
+        connection.close();
     }
 }

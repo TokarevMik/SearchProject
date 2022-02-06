@@ -2,30 +2,27 @@
 package main;
 
 import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Node {
-    String url;
-    String urlAddress; // адрес для бд
-    String domain = "https://skillbox.ru";
-    Connection.Response response;
-    Integer statusCode;
-    String contentOfPage = "";
+    private String url;
+    private String path; // адрес для бд
+    private String domain = "https://skillbox.ru";
+    private Connection.Response response;
+    private Integer statusCode;
+    private String contentOfPage = "";
 
-    public String getUrlAddress() {
-        return urlAddress;
+    public String getPath() {
+        return path;
     }
 
     public Integer getStatusCode() {
@@ -34,9 +31,6 @@ public class Node {
 
     public String getContentOfPage() {
         return contentOfPage;
-    }
-
-    public Node() {
     }
 
     public Node(String url) {
@@ -48,7 +42,8 @@ public class Node {
     }
 
     private Collection<Node> nodes = new HashSet<>();
-    public Collection<Node> getChildren(){
+
+    public Collection<Node> getChildren() {
         return nodes;
     }
 
@@ -60,13 +55,12 @@ public class Node {
             statusCode = response.statusCode(); //статус ответа
             Document doc = response.parse();
             contentOfPage = doc.html();   //содержимое страницы
-
             Element content = doc.body();
             Elements links = content.getElementsByTag("a");
             if (url.equals(domain)) {
-                urlAddress = domain;
+                path = domain;
             } else {
-                urlAddress = url.replace(domain, "");
+                path = url.replace(domain, "");
             }
 
             for (Element link : links) {
@@ -80,16 +74,19 @@ public class Node {
                     nodes.add(new Node(linkHref));   // добавление дочерней ссылки в список , но уровнем не ниже 1 от родительской
                 }
                 if (matcher2.matches()) {
-                    urlAddress = linkHref;
+                    path = linkHref;
                     linkHref = domain.concat(linkHref);
                     nodes.add(new Node(linkHref)); // ссылка типа "/****/"
                 }
             }
-        } catch (
-                Exception e) {
+        } catch (HttpStatusException se){
+            path = url.replace(domain, "");
+            contentOfPage = "";
+            statusCode = se.getStatusCode();
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
 }
