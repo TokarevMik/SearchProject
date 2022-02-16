@@ -1,4 +1,3 @@
-
 package main;
 
 import org.jsoup.Connection;
@@ -54,13 +53,19 @@ public class Node {
                     .referrer("http://www.google.com").maxBodySize(0).execute();
             statusCode = response.statusCode(); //статус ответа
             Document doc = response.parse();
-            contentOfPage = doc.html();   //содержимое страницы
+            contentOfPage = doc.html();//содержимое страницы
+            String title = doc.title();
+            System.out.println(title + " **");
             Element content = doc.body();
+            String bodyText = content.text();
+            System.out.println(bodyText + " *//* \n");
             Elements links = content.getElementsByTag("a");
             if (url.equals(domain)) {
                 path = domain;
             } else {
-                path = url.replace(domain, "");
+                if (url.contains(domain)) {
+                    path = url.replace(domain, "");
+                }
             }
 
             for (Element link : links) {
@@ -74,17 +79,15 @@ public class Node {
                     nodes.add(new Node(linkHref));   // добавление дочерней ссылки в список , но уровнем не ниже 1 от родительской
                 }
                 if (matcher2.matches()) {
-                    path = linkHref;
                     linkHref = domain.concat(linkHref);
                     nodes.add(new Node(linkHref)); // ссылка типа "/****/"
                 }
             }
-        } catch (HttpStatusException se){
+        } catch (HttpStatusException se) {
             path = url.replace(domain, "");
             contentOfPage = "";
             statusCode = se.getStatusCode();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

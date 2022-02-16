@@ -23,14 +23,10 @@ public class ParseNode extends RecursiveAction {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        if (node.getPath().equals("/payments/")){
-            System.out.println("Источник " + node.getUrl());
-        }
-        System.out.println("Test " + node.getPath() + " " + node.getStatusCode());
         Set<ParseNode> taskList = new CopyOnWriteArraySet<>();
 //******************************
         for (Node child : node.getChildren()) {
-            if (!isAlreadyAdded.contains(child.getUrl())&&!isAlreadyAdded.contains(child.getPath())) {
+            if (!isAlreadyAdded.contains(child.getUrl())) {
                 isAlreadyAdded.add(child.getUrl());
                 ParseNode parseNodeTask = new ParseNode(child);
                 parseNodeTask.fork();
