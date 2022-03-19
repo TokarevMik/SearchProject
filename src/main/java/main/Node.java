@@ -16,12 +16,16 @@ public class Node {
     private String url;
     private String path; // адрес для бд
     private String domain = "https://skillbox.ru";
+    private String title;
     private Connection.Response response;
     private Integer statusCode;
     private String contentOfPage = "";
 
     public String getPath() {
         return path;
+    }
+    public String getTitle() {
+        return title;
     }
 
     public Integer getStatusCode() {
@@ -54,11 +58,9 @@ public class Node {
             statusCode = response.statusCode(); //статус ответа
             Document doc = response.parse();
             contentOfPage = doc.html();//содержимое страницы
-            String title = doc.title();
-            System.out.println(title + " **");
+            title = doc.title();
             Element content = doc.body();
             String bodyText = content.text();
-            System.out.println(bodyText + " *//* \n");
             Elements links = content.getElementsByTag("a");
             if (url.equals(domain)) {
                 path = domain;

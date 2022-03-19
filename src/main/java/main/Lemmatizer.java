@@ -1,6 +1,7 @@
 package main;
 
 import org.apache.lucene.morphology.LuceneMorphology;
+import org.apache.lucene.morphology.WrongCharaterException;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
 
 import java.io.IOException;
@@ -8,26 +9,32 @@ import java.util.*;
 
 public class Lemmatizer {
 
-    //        lemCounter(sd);
     private String titleS;
     private String bodyS;
+    private Map<String, Double> rankMap = new HashMap<String, Double>();
+    private StringBuilder insertQuery = new StringBuilder();
+
+    public StringBuilder getInsertQuery() throws IOException {
+        lemRank();
+        fullTheBuilder(rankMap,insertQuery);
+        insertQuery.setLength(insertQuery.length() - 1);
+        System.out.println("insert " + insertQuery.toString() + " insert**");
+        return insertQuery;
+    }
+
+    public Map<String, Double> getRankMap() {
+        return rankMap;
+    }
 
     public Lemmatizer(String titleS, String bodyS) throws IOException {
         this.titleS = titleS;
         this.bodyS = bodyS;
     }
 
-/*    bodyS = "В повторное появление леопарда обитающего в " +
-            "Осетии позволяет предположить, что леопард постоянно " +
-            "обитает в некоторых районах Северного Кавказа.";*/
-
-    private Map<String, Double> titleMap = lemCounter(titleS);
-
-    private Map<String, Double> bodyMap = lemCounter(titleS);
-
-    public Map<String, Double> lemRank(Map<String, Double> titleMap, Map<String, Double> bodyMap) {
-        Map<String, Double> rankMap = new HashMap<String, Double>();
-        bodyMap.forEach((k,v)->rankMap.put(k, (0.8*v)));
+    public void lemRank() throws IOException {
+        Map<String, Double> titleMap = lemCounter(titleS);
+        Map<String, Double> bodyMap = lemCounter(bodyS);
+        bodyMap.forEach((k, v) -> rankMap.put(k, (0.8 * v)));
         for (Map.Entry<String, Double> entryT : titleMap.entrySet()) {
             String keyT = entryT.getKey();
             Double valueT = entryT.getValue();
@@ -38,13 +45,18 @@ public class Lemmatizer {
                 rankMap.put(keyT, valueT);
             }
         }
-        return rankMap;
     }
 
     private String[] stringSplitter(String s) {
+        s=s.replaceAll("<script(.*?)<\\/script>","");
+        s=s.replaceAll("<style(.*?)<\\/style>","");
+        s=s.replaceAll("&nbsp"," ");
+        s=s.replaceAll("&copy;'","");
+        s = s.replaceAll("\\<.*?\\>","");
+        s = s.replaceAll("[\\s-\\s]", " ");
         s = s.replaceAll("[^А-Яа-яA-Za-z\\s]", ""); //удаление лишних символов
-        s = s.replaceAll("[\\s]{2,}", ""); // удаление лишних пробелов
-        System.out.println(s);
+        s = s.replaceAll("[\\s]{2,}", " "); // удаление лишних пробелов
+//        System.out.println(s);
         return s.split(" ");
     }
 
@@ -52,18 +64,25 @@ public class Lemmatizer {
         Map<String, Double> countMap = new HashMap<>();
         LuceneMorphology luceneMorphology = new RussianLuceneMorphology();
         String[] arr = stringSplitter(s);
+
         for (String st : arr) {
-            List<String> wordBaseForms = luceneMorphology.getNormalForms(st.toLowerCase(Locale.ROOT));
-            for (String bf : wordBaseForms) {
-                if (isNotSpecial(bf)) {
-                    Double c = countMap.get(bf);
-                    if (c == null) {
-                        countMap.put(bf, 1.0);
-                    } else {
-                        countMap.put(bf, ++c);
+            try {
+                if (isCyrillic(st)) {
+                    List<String> wordBaseForms = luceneMorphology.getNormalForms(st.toLowerCase(Locale.ROOT));
+                    for (String bf : wordBaseForms) {
+                        if (isNotSpecial(bf)) {
+                            Double c = countMap.get(bf);
+                            if (c == null) {
+                                countMap.put(bf, 1.0);
+                            } else {
+                                countMap.put(bf, ++c);
+                            }
+                        }
                     }
                 }
-            }
+            } catch (WrongCharaterException e) {
+                System.out.print("**Exception - " + st);
+            }//++
         }
         for (Map.Entry<String, Double> entry : countMap.entrySet()) {
             System.out.println(entry.getKey() + " " + entry.getValue());
@@ -80,5 +99,15 @@ public class Lemmatizer {
             }
         }
         return true;
+    }
+
+    static boolean isCyrillic(String s) {
+        return s.chars()
+                .mapToObj(Character.UnicodeBlock::of)
+                .anyMatch(b -> b.equals(Character.UnicodeBlock.CYRILLIC));
+    }
+
+    public void fullTheBuilder(Map<String, Double> map,StringBuilder insertQuery) {
+        map.forEach((k, v) -> insertQuery.append("('" + k + "', '" + v + "'),"));
     }
 }
