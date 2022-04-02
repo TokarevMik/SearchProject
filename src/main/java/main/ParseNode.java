@@ -1,37 +1,52 @@
 package main;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.RecursiveAction;
 
+
 public class ParseNode extends RecursiveAction {
     private Node node;
+    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getRootLogger();
+    private static final Marker EXCEPTION_MARKER = MarkerManager.getMarker("EXCEPTION_ST");
 
     public Node getNode() {
         return node;
     }
+
     public ParseNode(Node node) {
         this.node = node;
     }
+
     public static Set<String> isAlreadyAdded = new CopyOnWriteArraySet<>();  // url already in DB (????)
+
     @Override
     protected void compute() {
         String url = node.getUrl(); //текущий адрес
         node.getParseNode();
         try {
             DBConnection.fullTheDb(node.getPath(), node.getStatusCode(), node.getContentOfPage());
-            Lemmatizer lemmatizer = new Lemmatizer(node.getTitle(), node.getContentOfPage());
-            StringBuilder builder = lemmatizer.getInsertQuery();
+//            Lemmatizer lemmatizer = new Lemmatizer(node.getTitle(), node.getContentOfPage());
+            Lemmatizer lemmatizer = new Lemmatizer(node.getTitle(), node.getBodyText());
+            StringBuffer builder = lemmatizer.getInsertQuery();
             DBConnection.executeMultiInsert(builder);
-        }  catch (SQLSyntaxErrorException e) {
+            int pageId = DBConnection.getPageId(node.getPath());
+            lemmatizer.queryForIndex(pageId);
+
+        } catch (SQLSyntaxErrorException e) {
             e.printStackTrace();
-            System.out.println(node.getUrl());
-        } catch (IOException e){
+            LOGGER.error(EXCEPTION_MARKER, (Object) e + " node.getUrl()");
+        } catch (IOException e) {
+            LOGGER.error(EXCEPTION_MARKER, (Object) e);
             e.printStackTrace();
-        }catch (SQLException ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
         }
         Set<ParseNode> taskList = new CopyOnWriteArraySet<>();
@@ -50,7 +65,7 @@ public class ParseNode extends RecursiveAction {
             }
         }
         for (ParseNode task : taskList) {
-                task.join();
+            task.join();
         }
     }
 }

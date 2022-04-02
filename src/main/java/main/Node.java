@@ -1,5 +1,8 @@
 package main;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -13,10 +16,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Node {
+
     private String url;
     private String path; // адрес для бд
     private String domain = "https://skillbox.ru";
     private String title;
+    String bodyText = "";
     private Connection.Response response;
     private Integer statusCode;
     private String contentOfPage = "";
@@ -24,8 +29,13 @@ public class Node {
     public String getPath() {
         return path;
     }
+
     public String getTitle() {
         return title;
+    }
+
+    public String getBodyText() {
+        return bodyText;
     }
 
     public Integer getStatusCode() {
@@ -35,6 +45,7 @@ public class Node {
     public String getContentOfPage() {
         return contentOfPage;
     }
+
 
     public Node(String url) {
         this.url = url;
@@ -60,7 +71,7 @@ public class Node {
             contentOfPage = doc.html();//содержимое страницы
             title = doc.title();
             Element content = doc.body();
-            String bodyText = content.text();
+            bodyText = content.text(); //
             Elements links = content.getElementsByTag("a");
             if (url.equals(domain)) {
                 path = domain;
