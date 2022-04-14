@@ -1,16 +1,18 @@
 package main;
+
 import org.apache.lucene.morphology.LuceneMorphology;
 import org.apache.lucene.morphology.english.EnglishLuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
+
 import java.io.IOException;
 import java.util.*;
 
-public class TestSearchClass {
+public class SearchRequest {
 
     public static void main(String[] args) throws IOException {
         Lemmatizer lemmatizer = new Lemmatizer();
         Scanner scn = new Scanner(System.in);
-        boolean loopRunning  = true;
+        boolean loopRunning = true;
         String[] arr;
         while (loopRunning) {
             System.out.println("Введи поисковый запрос");
@@ -20,11 +22,20 @@ public class TestSearchClass {
                 break;
             }
             arr = lemmatizer.stringSplitter(searchString); //строка запроса в массив
-            Set <String> SearchSet = new HashSet<>(LemmCounterMethod(arr).keySet());  //удаление повторов из запроса
-            Map<Integer,Integer> mapTest = DBConnection.searchReq(SearchSet); // id лемм сорт-х по встреч-и
-            mapTest.forEach((k,v)->System.out.println(k + " * " + v));  //провера выполнения запроса
-        }
+            Set<String> SearchSet = new HashSet<>(LemmCounterMethod(arr).keySet());  //удаление повторов из запроса
+            Map<Integer, Integer> mapLemm = DBConnection.searchReq(SearchSet); // id лемм сорт-х по встреч-и
+//            mapLemm.forEach((k,v)->System.out.println(k + " * " + v));  //проверrа выполнения запроса
+            Set<String> page = new Indexer(mapLemm).getPages();
+            List<PageResp> resps = new ArrayList<>();
+            page.forEach(p -> resps.add(new PageResp(p, mapLemm)));// список страниц по запросу(url)
+            double maxAbs = resps.stream().map(PageResp::getAsbRel).max(Comparator.naturalOrder()).get(); //максимальное абсолютн-я релевантность
+//            resps.forEach(p->System.out.println(p.getAsbRel() + " *"));
+            for (PageResp p : resps) {
+                p.setRelR(maxAbs);
+                System.out.println(p.getRelR());
+            }
 
+        }
     }//main
 
     public static Map<String, Double> LemmCounterMethod(String[] arr) throws IOException {

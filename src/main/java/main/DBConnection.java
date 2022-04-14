@@ -131,18 +131,32 @@ public class DBConnection {
                 sb.append("lemma = '").append(s).append("' or ");
             }
             sb.setLength(sb.length() - 3);
-            sb.append("ORDER BY frequency;"); //выборка лемм по запросу с частотой не более чем в половине страниц
+            sb.append("ORDER BY frequency ASC;"); //выборка лемм по запросу с частотой не более чем в половине страниц
             ResultSet resultSet = DBConnection.getConnection2().createStatement().executeQuery(sb.toString());
             while (resultSet.next()) {
-                 map.put(resultSet.getInt("id"), resultSet.getInt("frequency"));
+                map.put(resultSet.getInt("id"), resultSet.getInt("frequency"));
             }
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }
         return map;
     }  // возврат id лемм и встречаемости по поисковому запросу, тестовая версия
+
     public static void closeConnection() throws SQLException {
         connection.close();
+    }
+
+    public static Set<String> getPagesSet(int idLem) throws SQLException {
+        Set<String> pages = new HashSet<>();
+        Statement statement = getConnection2().createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT page.Path as Ids FROM page \n" +
+                "JOIN indexes ON page.id = indexes.page_id \n" +
+                "JOIN lemma ON lemma.id = indexes.lemma_id\n" +
+                "WHERE lemma.id = " + idLem + ";");
+        while (resultSet.next()) {
+            pages.add(resultSet.getString(1));
+        }
+        return pages;
     }
 
 }

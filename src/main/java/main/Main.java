@@ -7,6 +7,7 @@ public class Main {
     public static void main(String[] args) throws IOException, SQLException {
         DBConnection.getConnection();
         String url = "https://skillbox.ru";
+        String domain = url;
         Node root = new Node(url);
         ParseNode task = new ParseNode(root);
         task.invoke();

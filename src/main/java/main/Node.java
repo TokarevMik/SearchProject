@@ -1,5 +1,4 @@
 package main;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -83,7 +82,8 @@ public class Node {
 
             for (Element link : links) {
                 String linkHref = link.attr("href");
-                Pattern pattern = Pattern.compile("https://skillbox.ru/[\\w,\\D]+/$");
+//              Pattern pattern = Pattern.compile("https://skillbox.ru/[\\w,\\D]+/$");
+                Pattern pattern = Pattern.compile(domain+"/[\\w,\\D]+/$");
                 Matcher matcher = pattern.matcher(linkHref);
 
                 Pattern pattern2 = Pattern.compile("^/[\\w,-,_]+/$");
@@ -103,6 +103,7 @@ public class Node {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("3 " + url + " " + path);
     }
 
 }

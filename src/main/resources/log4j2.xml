@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+    <appenders>
+        <File name="InputErrors" fileName="logs/input_errors.log">
+            <PatternLayout pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <Filters>
+                <MarkerFilter marker="INVALID_***" />
+                <!--                <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>-->
+                <!--                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>-->
+            </Filters>
+        </File>
+        <File name="Exceptions" fileName="logs/exceptions.log">
+            <PatternLayout pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <Filters>
+                <MarkerFilter marker="EXCEPTION_ST" />
+
+            </Filters>
+        </File>
+    </appenders>
+
+    <loggers>
+        <root level="info">
+            <appender-ref ref="Search" level="info"/>
+            <appender-ref ref="InputErrors" level="warn"/>
+            <appender-ref ref="Search" level="info"/>
+        </root>
+
+
+    </loggers>
+</configuration>

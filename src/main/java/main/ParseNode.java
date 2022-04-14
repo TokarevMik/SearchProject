@@ -6,6 +6,7 @@ import org.apache.logging.log4j.MarkerManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.SQLSyntaxErrorException;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -25,7 +26,7 @@ public class ParseNode extends RecursiveAction {
         this.node = node;
     }
 
-    public static Set<String> isAlreadyAdded = new CopyOnWriteArraySet<>();  // url already in DB (????)
+    public static Set<String> isAlreadyAdded = new CopyOnWriteArraySet<>();  // url already in DB
 
     @Override
     protected void compute() {
@@ -33,7 +34,6 @@ public class ParseNode extends RecursiveAction {
         node.getParseNode();
         try {
             DBConnection.fullTheDb(node.getPath(), node.getStatusCode(), node.getContentOfPage());
-//            Lemmatizer lemmatizer = new Lemmatizer(node.getTitle(), node.getContentOfPage());
             Lemmatizer lemmatizer = new Lemmatizer(node.getTitle(), node.getBodyText());
             StringBuffer builder = lemmatizer.getInsertQuery();
             DBConnection.executeMultiInsert(builder);
@@ -46,7 +46,11 @@ public class ParseNode extends RecursiveAction {
         } catch (IOException e) {
             LOGGER.error(EXCEPTION_MARKER, (Object) e);
             e.printStackTrace();
-        } catch (SQLException ex) {
+        } catch (SQLIntegrityConstraintViolationException ex){
+            System.out.println("SQL **" + " Path" + node.getPath());
+            System.out.println("URL " + node.getUrl());
+        }
+        catch (SQLException ex) {
             ex.printStackTrace();
         }
         Set<ParseNode> taskList = new CopyOnWriteArraySet<>();
@@ -65,7 +69,10 @@ public class ParseNode extends RecursiveAction {
             }
         }
         for (ParseNode task : taskList) {
-            task.join();
+            try{task.join();}
+            catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 }
