@@ -1,7 +1,4 @@
 package main;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -9,13 +6,15 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Collection;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Node {
-
+    private static Map<String, String> titleMap = new HashMap<>();
     private String url;
     private String path; // адрес для бд
     private String domain = "https://skillbox.ru";
@@ -49,6 +48,7 @@ public class Node {
     public Node(String url) {
         this.url = url;
     }
+    public Node(){};
 
     public String getUrl() {
         return url;
@@ -77,12 +77,11 @@ public class Node {
             } else {
                 if (url.contains(domain)) {
                     path = url.replace(domain, "");
+                    titleMap.put(path,title);
                 }
             }
-
             for (Element link : links) {
                 String linkHref = link.attr("href");
-//              Pattern pattern = Pattern.compile("https://skillbox.ru/[\\w,\\D]+/$");
                 Pattern pattern = Pattern.compile(domain+"/[\\w,\\D]+/$");
                 Matcher matcher = pattern.matcher(linkHref);
 
@@ -105,5 +104,7 @@ public class Node {
         }
         System.out.println("3 " + url + " " + path);
     }
-
+    public static String getTitle (String url){
+        return titleMap.get(url);
+    }
 }

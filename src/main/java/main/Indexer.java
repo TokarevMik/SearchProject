@@ -1,6 +1,4 @@
 package main;
-
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,10 +10,10 @@ public class Indexer {
     }
 
     public Set<String> getPages() {
-        List<Integer> listOfId = new LinkedList(mapLemm.values()); //список id лем для поиска
+        List<Integer> listOfId = new LinkedList(mapLemm.keySet()); //список id лем для поиска
         Set<String> pages = new LinkedHashSet<>();
         try {
-            pages = DBConnection.getPagesSet(listOfId.get(0));
+            pages = DBConnection.getPagesSet(listOfId.get(0)); //список страниц с леммой с самой низкой частотой встреч-и
             for (Integer id : listOfId) {
                 pages = setCollection(pages, DBConnection.getPagesSet(id));
             }
@@ -25,7 +23,7 @@ public class Indexer {
         return pages;
     }
 
-    public static Set setCollection(Set<String> count, Set<String> st) {
+    public static Set setCollection(Set<String> count, Set<String> st) {  // удаление страниц не содержащих какую либо из лемм
         Set<Object> items = new HashSet<>(st.stream().filter(count::contains)
                 .collect(Collectors.toSet()));
         return items;

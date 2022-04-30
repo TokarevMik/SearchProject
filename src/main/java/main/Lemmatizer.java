@@ -61,13 +61,21 @@ public class Lemmatizer {
 
     public String[] stringSplitter(String s) {
         if (!s.isEmpty()) {
-            s = s.replaceAll("&nbsp", " ");
-            s = s.replaceAll("&copy;'", "");
-            s = s.replaceAll("[\\s-\\s]", " ");
-            s = s.replaceAll("[^А-Яа-яA-Za-z\\s]", ""); //удаление лишних символов
-            s = s.replaceAll("[\\s]{2,}", " "); // удаление лишних пробелов
+            stringCleaner(s);
         }
         return s.split(" ");
+    }
+
+    //1)  stringCleaner - вычистить массив
+    //2)  переписать lemCounter - получать массив лемм(!) вынести счетчик в отдельный метод
+
+    public String stringCleaner(String s) {
+        s = s.replaceAll("&nbsp", " ");
+        s = s.replaceAll("&copy;'", "");
+        s = s.replaceAll("[\\s-\\s]", " ");
+        s = s.replaceAll("[^А-Яа-яA-Za-z\\s]", ""); //удаление лишних символов
+        s = s.replaceAll("[\\s]{2,}", " "); // удаление лишних пробелов
+        return s;
     }
 
     public Map<String, Double> lemCounter(String s) throws IOException {
@@ -107,6 +115,12 @@ public class Lemmatizer {
         }
         return countMap;
     }
+//    public Map<String, Double> lemCounter(String s) throws IOException{
+//    Map<String, Double> countMap = new HashMap<>();
+//    String[] arr = stringSplitter(s);
+//    String[] arrLenn = lemmConvert(arr);
+//
+//    }
 
     public void queryForIndex(int id) throws SQLException {
         StringBuffer queryForIndex = new StringBuffer();
@@ -114,7 +128,7 @@ public class Lemmatizer {
         DBConnection.setIndex(queryForIndex);
     }
 
-    private boolean isNotSpecial(String s) throws IOException {
+    public static boolean isNotSpecial(String s) throws IOException {
         LuceneMorphology luceneMorphology = new RussianLuceneMorphology();
         List<String> wordBaseForms = luceneMorphology.getMorphInfo(s);
         for (String bf : wordBaseForms) {
@@ -124,7 +138,6 @@ public class Lemmatizer {
         }
         return true;  //удаление служебных слов
     }
-
 
     static boolean isCyrillic(String s) {
         return s.chars()

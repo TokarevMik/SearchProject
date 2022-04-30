@@ -159,4 +159,14 @@ public class DBConnection {
         return pages;
     }
 
+    public static String getContent(String url) throws SQLException {
+        String content = "";
+        Statement statement = getConnection2().createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT content FROM page " +
+                "WHERE Path = '" + url + "';");
+        while (resultSet.next()) {
+            content = resultSet.getString(1);
+        }
+        return content;
+    }
 }
